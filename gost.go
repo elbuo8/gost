@@ -17,8 +17,9 @@ const (
 )
 
 type Gost struct {
-	token  string
-	Client *http.Client
+	token      string
+	Client     *http.Client
+	GistAPIURL string
 }
 
 type Gist struct {
@@ -46,6 +47,7 @@ func NewGost(token string) *Gost {
 		Client: &http.Client{
 			Transport: &transport,
 		},
+		GistAPIURL: GistAPIURL,
 	}
 }
 
@@ -77,18 +79,12 @@ func (g *Gost) Create(description string, public bool, files ...*GistFile) ([]by
 		}
 		gist.Files[files[i].Filename] = *files[i]
 	}
-	payload, err := json.Marshal(gist)
-	if err != nil {
-		return nil, err
-	}
+	payload, _ := json.Marshal(gist)
 	return g.makeRequest("POST", "/gists", bytes.NewReader(payload))
 }
 
 func (g *Gost) Edit(id string, gist *Gist) ([]byte, error) {
-	payload, err := json.Marshal(gist)
-	if err != nil {
-		return nil, err
-	}
+	payload, _ := json.Marshal(gist)
 	return g.makeRequest("PATCH", "/gists/"+id, bytes.NewReader(payload))
 }
 
@@ -105,10 +101,7 @@ func (g *Gost) ListForks(id string) ([]byte, error) {
 }
 
 func (g *Gost) makeRequest(method, endpoint string, body io.Reader) ([]byte, error) {
-	req, err := http.NewRequest(method, GistAPIURL+endpoint, body)
-	if err != nil {
-		return nil, err
-	}
+	req, _ := http.NewRequest(method, g.GistAPIURL+endpoint, body)
 	header := http.Header{}
 	header.Add("Accept", AcceptHeader)
 	header.Add("Authorization", "token "+g.token)
