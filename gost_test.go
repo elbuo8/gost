@@ -88,7 +88,7 @@ func TestCreateMissingName(t *testing.T) {
 }
 
 func TestEdit(t *testing.T) {
-	g := NewGost(TOKEN)
+	g.GistAPIURL = fakeServer.URL
 	gist := &Gist{
 		Description: "Awesome stuff",
 		Filename:    "MY FILE!",
@@ -134,6 +134,38 @@ func TestFailedRequest(t *testing.T) {
 	_, err := gost.GetPublic()
 	if err == nil {
 		t.Errorf("Request should fail on incorrect token")
+	}
+}
+
+func TestStar(t *testing.T) {
+	g.GistAPIURL = fakeServer.URL
+	_, err := g.Star("1")
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestUnStar(t *testing.T) {
+	g.GistAPIURL = fakeServer.URL
+	_, err := g.UnStar("1")
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestCheckStar(t *testing.T) {
+	g.GistAPIURL = fakeServer.URL
+	_, err := g.CheckStar("1")
+	if err != nil {
+		t.Errorf("%v", err)
+	}
+}
+
+func TestDelete(t *testing.T) {
+	g.GistAPIURL = fakeServer.URL
+	_, err := g.Delete("1")
+	if err != nil {
+		t.Errorf("%v", err)
 	}
 }
 
