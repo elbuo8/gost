@@ -11,7 +11,7 @@ const (
 	TOKEN = "MY TOKEN!"
 )
 
-var g = NewGost(TOKEN)
+var g = New(TOKEN)
 
 var fakeServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 	switch {
@@ -29,7 +29,7 @@ var fakeServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter,
 }))
 
 func TestNewGost(t *testing.T) {
-	gost := NewGost(TOKEN)
+	gost := New(TOKEN)
 	if gost == nil {
 		t.Errorf("New Gost should not return nil")
 	}
@@ -129,7 +129,7 @@ func TestListForks(t *testing.T) {
 }
 
 func TestFailedRequest(t *testing.T) {
-	gost := NewGost("Fail Token")
+	gost := New("Fail Token")
 	gost.GistAPIURL = fakeServer.URL
 	_, err := gost.GetPublic()
 	if err == nil {
