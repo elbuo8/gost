@@ -38,7 +38,7 @@ func timeoutHandler(network, address string) (net.Conn, error) {
 	return net.DialTimeout(network, address, time.Duration(5*time.Second))
 }
 
-func NewGost(token string) *Gost {
+func New(token string) *Gost {
 	transport := http.Transport{
 		Dial: timeoutHandler,
 	}
