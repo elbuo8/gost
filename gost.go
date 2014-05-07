@@ -11,17 +11,20 @@ import (
 	"time"
 )
 
+// GitHub API information and requirements
 const (
 	GistAPIURL   = "https://api.github.com"
 	AcceptHeader = "application/vnd.github.v3+json"
 )
 
+// Gost client
 type Gost struct {
 	token      string
 	Client     *http.Client
 	GistAPIURL string
 }
 
+// Gist Representation
 type Gist struct {
 	Description string              `json:"description"`
 	Public      bool                `json:"public"`
@@ -29,6 +32,7 @@ type Gist struct {
 	Filename    string              `json:"filename,omitempty"`
 }
 
+// GistFile representation
 type GistFile struct {
 	Filename string `json:"-"`
 	Content  string `json:"content"`
@@ -38,6 +42,7 @@ func timeoutHandler(network, address string) (net.Conn, error) {
 	return net.DialTimeout(network, address, time.Duration(5*time.Second))
 }
 
+// New will return a new Gost client
 func New(token string) *Gost {
 	transport := http.Transport{
 		Dial: timeoutHandler,
@@ -51,22 +56,27 @@ func New(token string) *Gost {
 	}
 }
 
+// GetUser ...
 func (g *Gost) GetUser(user string) ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/users/"+user+"/gists", nil))
 }
 
+// GetPublic ...
 func (g *Gost) GetPublic() ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/gists/public", nil))
 }
 
+// GetStarred ...
 func (g *Gost) GetStarred() ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/gists/starred", nil))
 }
 
+// Get ...
 func (g *Gost) Get(id string) ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/gists/"+id, nil))
 }
 
+// Create ...
 func (g *Gost) Create(description string, public bool, files ...*GistFile) ([]byte, error) {
 	gist := Gist{
 		Description: description,
@@ -75,7 +85,7 @@ func (g *Gost) Create(description string, public bool, files ...*GistFile) ([]by
 	}
 	for i := 0; i < len(files); i++ {
 		if files[i].Filename == "" {
-			return nil, fmt.Errorf("Filename undefined for %+v GistFile", files[i])
+			return nil, fmt.Errorf("filename undefined for %+v GistFile", files[i])
 		}
 		gist.Files[files[i].Filename] = *files[i]
 	}
@@ -83,38 +93,46 @@ func (g *Gost) Create(description string, public bool, files ...*GistFile) ([]by
 	return mitigateJSON(g.makeRequest("POST", "/gists", bytes.NewReader(payload)))
 }
 
+// Edit ...
 func (g *Gost) Edit(id string, gist *Gist) ([]byte, error) {
 	payload, _ := json.Marshal(gist)
 	return mitigateJSON(g.makeRequest("PATCH", "/gists/"+id, bytes.NewReader(payload)))
 }
 
+// ListCommits ...
 func (g *Gost) ListCommits(id string) ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/gists/"+id+"/commits", nil))
 }
 
+// Fork ...
 func (g *Gost) Fork(id string) ([]byte, error) {
 	return mitigateJSON(g.makeRequest("POST", "/gists/"+id+"/forks", nil))
 }
 
+// ListForks ...
 func (g *Gost) ListForks(id string) ([]byte, error) {
 	return mitigateJSON(g.makeRequest("GET", "/gists/"+id+"/forks", nil))
 }
 
+// Star ...
 func (g *Gost) Star(id string) (bool, error) {
 	resp, err := g.makeRequest("PUT", "/gists/"+id+"/star", nil)
 	return mitigateCode(http.StatusNoContent, resp, err)
 }
 
+// UnStar ...
 func (g *Gost) UnStar(id string) (bool, error) {
 	resp, err := g.makeRequest("DELETE", "/gists/"+id+"/star", nil)
 	return mitigateCode(http.StatusNoContent, resp, err)
 }
 
+// CheckStar ...
 func (g *Gost) CheckStar(id string) (bool, error) {
 	resp, err := g.makeRequest("GET", "/gists/"+id+"/star", nil)
 	return mitigateCode(http.StatusNoContent, resp, err)
 }
 
+// Delete ...
 func (g *Gost) Delete(id string) (bool, error) {
 	resp, err := g.makeRequest("DELETE", "/gists/"+id, nil)
 	return mitigateCode(http.StatusNoContent, resp, err)
@@ -131,7 +149,7 @@ func (g *Gost) makeRequest(method, endpoint string, body io.Reader) (*http.Respo
 	case err != nil:
 		return nil, err
 	case resp.StatusCode == http.StatusUnauthorized:
-		return nil, fmt.Errorf("Invalid Token")
+		return nil, fmt.Errorf("invalid Token")
 	}
 
 	return resp, err
